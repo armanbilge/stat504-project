@@ -1,0 +1,150 @@
+---
+title: "Stat 504 Homework 2 Part I: Project Idea"
+author: Arman Bilge
+date: January 25
+---
+
+\frenchspacing
+
+```{r setup, echo = F, message = F}
+knitr::opts_chunk$set(cache = T)
+set.seed(666)
+library(httr)
+library(jsonlite)
+library(plyr)
+API_KEY <- "AIzaSyAnu1sbEOUwfv2s4IfLyLYvSrn4ODMZSy4"
+stations <- read.csv("2016_station_data.csv", fill = T, header = T)
+trips <- read.csv("2016_trip_data.csv", fill = T, header = T)
+weather <- read.csv("2016_weather_data.csv", fill = T, header = T)
+```
+
+```{r elevation, echo = F}
+with.elevation <- function(df) {
+  base.url <- "https://maps.googleapis.com/maps/api/elevation/json"
+  positions <- apply(df, 1, function(row) paste(row["lat"], ",", row["long"], sep = ""))
+  url <- httr:::handle_url(url = base.url, query = list(key = API_KEY, locations = paste(positions, collapse = "|")))$url
+  df$elevation <- fromJSON(url)$results$elevation
+  return(df)
+}
+stations <- with.elevation(stations)
+```
+
+```{r nearby, echo = F}
+with.count.nearby <- function(df, type, radius = 500) {
+  base.url <- "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
+  url <- function(row) httr:::handle_url(url = base.url, query = list(key = API_KEY, location = paste(row["lat"], ",", row["long"], sep = ""), type = type, radius = radius))$url
+  counts <- apply(df, 1, function(row) {
+    response <- fromJSON(url(row))
+    count <- 0
+    while (!is.null(response$next_page_token)) {
+      Sys.sleep(0.1)
+      count <- count + 20
+      new.url <- httr:::handle_url(url = base.url, query = list(key = API_KEY, pagetoken = response$next_page_token))$url
+      response <- fromJSON(new.url)
+      while (response$status != "OK") {
+        Sys.sleep(0.1)
+        response <- fromJSON(new.url)
+      }
+    }
+    return(count + length(response$results$name))
+  })
+  df[[paste(type, "count", sep = ".")]] <- counts
+  return(df)
+}
+stations <- with.count.nearby(stations, "restaurant", 100)
+```
+
+```{r datetime, echo = F}
+parse.datetime <- function(df) {
+  df$starttime <- strptime(as.character(df$starttime), "%m/%d/%Y %H:%M")
+  df$stoptime <- strptime(as.character(df$stoptime), "%m/%d/%Y %H:%M")
+  return(df)
+}
+trips <- parse.datetime(trips)
+
+parse.date <- function(df) {
+  df$Date <- as.Date(as.character(df$Date), "%m/%d/%Y")
+  return(df)
+}
+weather <- parse.date(weather)
+```
+
+```{r filters, echo = F}
+members.only <- function(df) subset(df, usertype == "Member")
+strip.times <- function(df) {
+  df$starttime <- as.Date(df$starttime)
+  df$stoptime <- as.Date(df$stoptime)
+  return(df)
+}
+```
+
+```{r net_change, echo = F}
+count.departures <- function(df) aggregate(list(departures = df$trip_id), by = list(date = df$starttime, station_id = df$from_station_id), FUN = length)
+count.arrivals <- function(df) aggregate(list(arrivals = df$trip_id), by = list(date = df$starttime, station_id = df$to_station_id), FUN = length)
+daily.net.change <- function(df) {
+  df <- strip.times(df)
+  arrivals <- count.arrivals(df)
+  departures <- count.departures(df)
+  merged <- merge(arrivals, departures, by = c("date", "station_id"))
+  merged$net.change <- (merged$arrivals - merged$departures) / (merged$arrivals + merged$departures)
+  return(merged)
+}
+```
+```{r mean_birthyear, echo = F}
+mean.departure.birthyear <- function(df) aggregate(list(departure.birthyear = df$birthyear), by = list(date = df$starttime, station_id = df$from_station_id), FUN = mean)
+mean.arrival.birthyear <- function(df) aggregate(list(arrival.birthyear = df$birthyear), by = list(date = df$starttime, station_id = df$to_station_id), FUN = mean)
+mean.birthyear <- function(df) merge(mean.arrival.birthyear(df), mean.departure.birthyear(df), by = c("date", "station_id"))
+```
+
+```{r full_data, echo = F}
+member.trips <- strip.times(members.only(trips))
+full.data <- merge(merge(daily.net.change(member.trips), stations, by = "station_id"), weather, by.x = "date", by.y = "Date")
+```
+
+# Research Question
+
+In a cycle sharing system, users pick-up and drop-off bikes at various stations throughout a city, generally without any requirement to return the bike where they obtained it.
+As a result, some stations may become *sources* (more bikes are picked-up than dropped-off) and others may become *sinks* (more bikes are dropped-off than picked-up).
+I would like to investigate what features of a station's location affect whether it is a source or sink in the system.
+This analysis could help to coordinate transportation of bikes between stations so as to rebalance their distribution.
+Furthermore, if adding a new station to a system, the choice of location can be informed by a prediction of whether that station would be a source or sink.
+
+# Data
+
+The cycle sharing data comes from the Seattle-based company Pronto.^[`https://www.prontocycleshare.com/data`]
+Their 2016 dataset includes the last two years of trip data (`r nrow(trips)` trips in total), including each trip's start and end date, time, and station and the biker's gender and year of birth.
+They also include daily weather data, including summary statistics of temperature, dewpoint, humidity, barometric pressure, visibility, wind speed, and precipitation.
+To better appreciate the location features of a particular station, I am augmenting the Pronto dataset with data from the Google Maps API^[`https://developers.google.com/maps/`] (e.g., elevation and nearby points-of-interest) for each cycle share station.
+
+# Illustrative Exploratory Analysis
+
+The daily net change in bikes varies greatly between stations and across days, due to a large number of factors.
+To make results comparable between stations and days, I define the *normalized daily net change* at a station as
+$$\frac{\text{\#arrivals} - \text{\#departures}}{\text{\#arrivals} + \text{\#departures}}$$
+In the following I use the normalized daily net change as the outcome $Y$. For illustration, here I consider the elevation of the station and the number of restaurants within a 100-meter radius of the station as the covariates $\mathbf{X}$ (Table 1, Figure 1).
+
+Table: Summary statistics of covariates and outcome.
+
+| **Variable** | **Mean** | **SD** | **Min** | **Max** |
+|-|-:|-:|-:|-:|
+| daily net change | $`r knitr:::format_sci(mean(full.data$net.change))`$ | $`r knitr:::format_sci(sd(full.data$net.change))`$ | $`r knitr:::format_sci(min(full.data$net.change))`$ | $`r knitr:::format_sci(max(full.data$net.change))`$ |
+| elevation | $`r knitr:::format_sci(mean(stations$elevation))`$ | $`r knitr:::format_sci(sd(stations$elevation))`$ | $`r knitr:::format_sci(min(stations$elevation))`$ | $`r knitr:::format_sci(max(stations$elevation))`$ |
+| nearby restaurants | $`r knitr:::format_sci(mean(stations$restaurant.count))`$ | $`r knitr:::format_sci(sd(stations$restaurant.count))`$ | $`r knitr:::format_sci(min(stations$restaurant.count))`$ | $`r knitr:::format_sci(max(stations$restaurant.count))`$ |
+
+```{r hist, echo = F, dev = 'pdf', fig.width = 7.5, fig.height = 3.5, fig.cap = "Histograms of covariates and outcome."}
+par(mfrow = c(1, 3))
+hist(full.data$net.change, xlab = "daily net change", main = "")
+hist(stations$elevation, xlab = "station elevation", main = "")
+hist(stations$restaurant.count, xlab = "number of nearby restaurants", main = "")
+```
+
+Even when accounting for the covariates, there is still substantial variation in the data (Figure 2).
+There does appear to be a clear decrease in daily net change as stations' elevation increases, suggesting that stations at lower elevations are sinks and that stations at higher elevations are sources.
+Furthermore, variation appears roughly constant (accounting for different numbers of trips across elevations), so a simple linear regression model could be quite appropriate to describe this trend.
+However, arguments against using a simple linear regression model include the observation that the data are not totally independent (because the total number of bikes in the system must remain roughly constant) and also concern for the unknown effects of the normalization technique.
+
+```{r scatter, echo = F, dev = 'pdf', fig.width = 7.5, fig.height = 4.5, fig.cap = "Scatterplots of covariates and outcome."}
+par(mfrow = c(1, 2))
+plot(full.data$elevation, full.data$net.change, xlab = "elevation", ylab = "daily net change", main = "")
+plot(full.data$restaurant.count, full.data$net.change, xlab = "number of nearby restaurants", ylab = "daily net change", main = "")
+```
