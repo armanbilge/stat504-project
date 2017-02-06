@@ -1,7 +1,7 @@
 ---
-title: "Stat 504 Homework 2 Part I: Project Idea"
-author: Arman Bilge
-date: January 25
+title: "Stat 504 Project Proposal"
+author: Arman Bilge, Yanbo Ge, and Xiaoliu Wu
+date: February 8
 ---
 
 \frenchspacing
