@@ -1,4 +1,5 @@
 Imports:
+    knitr,
     httr,
     jsonlite,
     plyr
