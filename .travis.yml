@@ -2,17 +2,18 @@ language: r
 pandoc_version: 1.19.1
 cache: packages
 script:
-  - rake proposal.pdf
-  - rake proposal.html
-  - mkdir dist
-  - cp -r *.pdf *.html figure/ dist
+- rake proposal.pdf
+- rake proposal.html
+- mkdir dist
+- cp -r *.pdf *.html figure/ dist
 deploy:
   provider: pages
   local_dir: dist
   skip_cleanup: true
-  github_token: $GITHUB_TOKEN
+  github_token: "$GITHUB_TOKEN"
   on:
     branch: master
 notifications:
   email: false
-  slack: $SLACK_TOKEN
+  slack:
+    secure: JyvZ310+Ny+DZER+XPSR4O5Tvt89nIIFooOO2TZtjNFu9HPY0tZ6ZxkDNp0p9N3E1hH8bT9Y/92anv1S/+CCzHLMiIBDakbRqPOSgreaTejMobgw54is50UrNuawsvL8fcsNr1LIyMdomUXdS+7399DHP89bqfW6zpUVYONVByfktHRT/YHydUc0607iemnSirNrQTlqDiNuj4ZYTqA3wnT1tnn+RZuzEGTx1wroh4rQj+PceXNHWX/Ym5bLzX4ymMRPXucdpc3PueHSbeQ+cxSZtCc4iziccpBGiKKjauO0LkFkC0JqD9W99OSHRp02M+NaGbwXPVgDwPYdg5gt1ddMI1Ps5XtV/u2s3I/IzzKqNB6yErpNMXl6WckRQLMzvI+qNYPKByQMtsa4F2B8YPXUopeLZESDDXEdJElEkEDJHzcbUjxSwIP4mkQ09/xgV5k1aUkYwRhAXaxb0rgG4sRA6Bzae0+IoqitJ7BOUwMdC2S055leFVXOCe3Nictx2CxKCiNysoDMBmB1uOnZd2h3MQT7sWc6F2vI5eDNjHHuoruRltrJVmWGsMXxQSSiv0y6D7TOHv8l0S8aBkBPkU+bfJfpFCO152t1+Az4wUVN/jK3N3upiu+2ZCtkKT+QxoiIDZlTkHGfIW8xL749lNLns5hyfdOKuK6X4hilzo4=
