@@ -1,0 +1,17 @@
+language: r
+pandoc_version: 1.19.1
+cache: packages
+script:
+  - rake proposal.pdf
+  - rake proposal.html
+  - mkdir dist
+  - cp -r *.pdf *.html figure/ dist
+deploy:
+  provider: pages
+  local_dir: dist
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  on:
+    branch: master
+notifications:
+  slack: $SLACK_TOKEN
