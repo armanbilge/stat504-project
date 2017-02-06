@@ -131,7 +131,7 @@ Table: Summary statistics of covariates and outcome.
 | elevation | $`r knitr:::format_sci(mean(stations$elevation))`$ | $`r knitr:::format_sci(sd(stations$elevation))`$ | $`r knitr:::format_sci(min(stations$elevation))`$ | $`r knitr:::format_sci(max(stations$elevation))`$ |
 | nearby restaurants | $`r knitr:::format_sci(mean(stations$restaurant.count))`$ | $`r knitr:::format_sci(sd(stations$restaurant.count))`$ | $`r knitr:::format_sci(min(stations$restaurant.count))`$ | $`r knitr:::format_sci(max(stations$restaurant.count))`$ |
 
-```{r hist, echo = F, dev = 'pdf', fig.width = 7.5, fig.height = 3.5, fig.cap = "Histograms of covariates and outcome."}
+```{r hist, echo = F, fig.width = 7.5, fig.height = 3.5, fig.cap = "Histograms of covariates and outcome."}
 par(mfrow = c(1, 3))
 hist(full.data$net.change, xlab = "daily net change", main = "")
 hist(stations$elevation, xlab = "station elevation", main = "")
@@ -143,7 +143,7 @@ There does appear to be a clear decrease in daily net change as stations' elevat
 Furthermore, variation appears roughly constant (accounting for different numbers of trips across elevations), so a simple linear regression model could be quite appropriate to describe this trend.
 However, arguments against using a simple linear regression model include the observation that the data are not totally independent (because the total number of bikes in the system must remain roughly constant) and also concern for the unknown effects of the normalization technique.
 
-```{r scatter, echo = F, dev = 'pdf', fig.width = 7.5, fig.height = 4.5, fig.cap = "Scatterplots of covariates and outcome."}
+```{r scatter, echo = F, fig.width = 7.5, fig.height = 4.5, fig.cap = "Scatterplots of covariates and outcome."}
 par(mfrow = c(1, 2))
 plot(full.data$elevation, full.data$net.change, xlab = "elevation", ylab = "daily net change", main = "")
 plot(full.data$restaurant.count, full.data$net.change, xlab = "number of nearby restaurants", ylab = "daily net change", main = "")
