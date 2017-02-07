@@ -7,6 +7,10 @@ date: February 8
 
 \frenchspacing
 
+```{r setup, echo = F, message = F}
+trips <- read.csv("2016_trip_data.csv", fill = T, header = T)
+```
+
 # Research Question
 
 **TODO** Update me.
