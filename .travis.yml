@@ -5,6 +5,7 @@ script:
 - rake proposal.pdf
 - rake proposal.html
 - mkdir dist
+- mkdir -p figure
 - cp -r *.pdf *.html figure/ dist
 deploy:
   provider: pages
