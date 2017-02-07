@@ -1,9 +1,6 @@
 language: r
 pandoc_version: 1.19.1
 cache: packages
-sudo: required
-install:
-- sudo apt-get install pandoc-citeproc
 script:
 - rake proposal.pdf
 - rake proposal.html
