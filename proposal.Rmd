@@ -2,6 +2,60 @@
 title: Stat 504 Project Proposal
 author: Arman Bilge, Yanbo Ge, and Xiaoliu Wu
 date: February 8
+references:
+- id: Fis16
+  type: paper-conference
+  author:
+  - given: Elliot
+    family: Fishman
+  issued:
+    year: 2016
+  title: "Bikeshare: A Review of Recent Literature"
+  container-title: Transport Reviews
+  volume: 36
+  number: 1
+  page: 92–113
+  DOI: 10.1080/01441647.2015.1033036
+- id: GN13
+  type: paper-conference
+  author:
+  - given: Kyle
+    family: Gebhart
+  - given: Robert B.
+    family: Noland
+  issued:
+    year: 2013
+  title: "The Impact of Weather Conditions on Capital Bikeshare Trips"
+  container-title: TRB 92nd Annual Meeting Compendium of Papers
+  URL: https://trid.trb.org/view.aspx?id=1240556
+- id: KSI+12
+  type: paper-conference
+  author:
+  - given: DongJun
+    family: Kim
+  - given: HeeCheol
+    family: Shin
+  - given: Hyeongjun
+    family: Im
+  - given: Junsik
+    family: Park
+  issued:
+    year: 2012
+  title: "Factors Influencing Travel Behaviors in Bikesharing"
+  container-title: TRB 91st Annual Meeting Compendium of Papers
+  URL: https://trid.trb.org/view.aspx?id=1129171
+- id: Sma17
+  type: article-newspaper
+  author:
+  - given: Andrew
+    family: Small
+  issued:
+    day: 31
+    month: January
+    year: 2017
+  title: "The Four Horsemen of the Bike Share Apocalypse"
+  container-title: CityLab
+  URL: http://www.citylab.com/commute/2017/01/seattle-bike-share-pronto-goes-under/513575/
 
 ---
 
@@ -11,22 +65,20 @@ date: February 8
 trips <- read.csv("2016_trip_data.csv", fill = T, header = T)
 ```
 
-# Research Question
+The city of Seattle recently announced that its bike-sharing service, Pronto, will be terminated this March.
+Several potential causes of the low ridership that led to the program's failure have been proposed, including Seattle's weather, topography, and the location of bike stations [@Sma17].
+Furthermore, previous studies have shown that the proximity of stations to alternative transportation options and commercial and residential buildings are significant predictors of a system's usage [@Fis16; @GN13; @KSI+12].
+We want to understand which of the aforementioned factors affect Pronto ridership in Seattle.
+Not only can our analysis help understand why Pronto failed, it may also facilitate the design and implementation of more effective bike-sharing services in the future.
 
-**TODO** Update me.
-
-In a cycle sharing system, users pick-up and drop-off bikes at various stations throughout a city, generally without any requirement to return the bike where they obtained it.
-As a result, some stations may become *sources* (more bikes are picked-up than dropped-off) and others may become *sinks* (more bikes are dropped-off than picked-up).
-I would like to investigate what features of a station's location affect whether it is a source or sink in the system.
-This analysis could help to coordinate transportation of bikes between stations so as to rebalance their distribution.
-Furthermore, if adding a new station to a system, the choice of location can be informed by a prediction of whether that station would be a source or sink.
-
-# Data
-
-The cycle sharing data comes from the Seattle-based company Pronto.^[`https://www.prontocycleshare.com/data`]
-Their 2016 dataset includes the last two years of trip data (`r nrow(trips)` trips in total), including each trip's start and end date, time, and station and the biker's gender and year of birth.
+Pronto provides open data for public use.^[`https://www.prontocycleshare.com/data`]
+Their 2016 dataset includes the last two years of trip data (`r nrow(trips)` trips in total), including each trip's start and end date, time, and station and the biker's gender and year of birth if they are an annual member.
 They also include daily weather data, including summary statistics of temperature, dewpoint, humidity, barometric pressure, visibility, wind speed, and precipitation.
-To better appreciate the location features of a particular station, I am augmenting the Pronto dataset with data from the Google Maps API^[`https://developers.google.com/maps/`] (e.g., elevation and nearby points-of-interest) for each cycle share station.
+To better appreciate the location features of a particular station, we are augmenting the Pronto-provided dataset with data from the Google Maps API^[`https://developers.google.com/maps/`] (e.g., elevation and nearby points-of-interest) for each bike-share station.
 
-# References
+The outcome variable for our regression analysis will be the daily frequency of a particular trip, where a trip is defined by its start and end stations.
+Data in a bike share system is structured by the fact that the total number of bikes must remain constant, and thus that the total number of arrivals and departures must be equal.
+By choosing to count trips, we hope to circumvent this structure.
+Another potential complication is that the number of members in the system is an important covariate that is not currently provided in the Pronto dataset.
 
+## References
