@@ -1,5 +1,7 @@
 Imports:
     knitr,
+    chron,
+    gplots,
     httr,
     jsonlite,
     plyr

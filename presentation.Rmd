@@ -1,0 +1,206 @@
+---
+title: Bike Share Usage
+author: Arman Bilge, Yanbo Ge, and Xiaoliu Wu
+date: February 27
+---
+
+<style type="text/css">
+	.reveal h1 { font-size: 2.5em; }
+  .reveal h2 { font-size: 1.5em; }
+  img {
+    width: 640px;
+    height: 640px;
+  }
+</style>
+
+# Intro
+
+```{r setup, echo = F, message = F}
+knitr::opts_chunk$set(cache = F)
+set.seed(666)
+library(chron)
+library(gplots)
+library(httr)
+library(jsonlite)
+library(plyr)
+API_KEY <- "AIzaSyAnu1sbEOUwfv2s4IfLyLYvSrn4ODMZSy4"
+stations <- read.csv("2016_station_data.csv", fill = T, header = T)
+trips <- read.csv("2016_trip_data.csv", fill = T, header = T)
+weather <- read.csv("2016_weather_data.csv", fill = T, header = T)
+census <- read.csv("neighborhood_variables.csv", fill = T, header = T)
+```
+
+```{r elevation, echo = F}
+with.elevation <- function(df) {
+  base.url <- "https://maps.googleapis.com/maps/api/elevation/json"
+  positions <- apply(df, 1, function(row) paste(row["lat"], ",", row["long"], sep = ""))
+  url <- httr:::handle_url(url = base.url, query = list(key = API_KEY, locations = paste(positions, collapse = "|")))$url
+  df$elevation <- fromJSON(url)$results$elevation
+  return(df)
+}
+stations <- with.elevation(stations)
+```
+
+```{r census, echo = F}
+census$name <- NULL
+stations <- merge(stations, census, by = "station_id")
+```
+
+```{r filters, echo = F}
+members.only <- function(df) subset(df, usertype == "Member")
+strip.times <- function(df) {
+  df$starttime <- as.Date(df$starttime)
+  df$stoptime <- as.Date(df$stoptime)
+  return(df)
+}
+weekdays.only <- function(df) subset(df, weekend == F)
+```
+
+```{r datetime, echo = F}
+parse.datetime <- function(df) {
+  df$starttime <- strptime(as.character(df$starttime), "%m/%d/%Y %H:%M")
+  df$stoptime <- strptime(as.character(df$stoptime), "%m/%d/%Y %H:%M")
+  df$weekend <- is.weekend(df$starttime)
+  return(df)
+}
+trips <- parse.datetime(trips)
+
+parse.date <- function(df) {
+  df$Date <- as.Date(as.character(df$Date), "%m/%d/%Y")
+  return(df)
+}
+weather <- parse.date(weather)
+```
+
+```{r full_data, echo = F}
+count.daily <- function(df) aggregate(list(trips = df$trip_id), by = list(date = df$starttime), FUN = length)
+count.daily.station.inflow <- function(df) {
+  df <- aggregate(list(trips = df$trip_id), by = list(date = df$starttime, to_station_id = df$to_station_id), FUN = length)
+  product <- expand.grid(to_station_id = unique(df$to_station_id), date = unique(df$date))
+  df <- merge(df, product, all = T)
+  df$trips[is.na(df$trips)] <- 0
+  return(df)
+}
+trips <- weekdays.only(strip.times(trips))
+full.data <- merge(count.daily(trips), weather, by.x = "date", by.y = "Date")
+inflow.data <- merge(merge(count.daily.station.inflow(trips), stations, by.x = "to_station_id", by.y = "station_id"), weather, by.x = "date", by.y = "Date")
+```
+
+<iframe src="http://willleahy.info/bikeshare/" style="width: 100%; height: 500px"></iframe>
+
+# Question
+
+Which features of a station affect its daily usage?
+Can we use these to decide where to place stations?
+
+# Data
+
+## Sources
+
+* Pronto! (October 2014–August 2016)
+    * record for every trip taken
+    * daily weather report
+* Google Maps API
+    * elevation
+    * nearby points-of-interest
+* Puget Sound Regional Council Census
+    * socio-economic data
+
+## Covariates of Interest
+
+* elevation
+* job density
+* average income
+* also hope to use:
+    * number of nearby restaurants
+    * number of bus routes at nearest stop
+
+## Confounding Variables
+
+* weather
+    * temperature
+    * precipitation
+* total membership (not in data!)
+
+# Exploration
+
+## Temperature
+
+```{r temperature, echo = F}
+plot(full.data$Mean_Temperature_F, full.data$trips)
+abline(lm(trips ~ Mean_Temperature_F, data = full.data), col = "red")
+```
+
+## Precipitation
+
+```{r precipitation, echo = F}
+plot(full.data$Precipitation_In, full.data$trips)
+abline(lm(trips ~ Precipitation_In, data = full.data), col = "red")
+```
+
+## Estimates
+
+```{r estimates, echo = F}
+summary(lm(trips ~ Mean_Temperature_F + Precipitation_In, data = full.data))
+```
+
+# Methods
+
+##
+
+* Dropped weekends
+* Counted number of daily arrivals per station
+* Fit linear model with weather and covariates of interest
+* Two independent code bases give same results
+
+## Model
+
+$$
+y \sim \beta X + \epsilon, \epsilon \sim \mathcal{N}(0, \sigma I)
+$$
+
+* $y$ is daily "in-flow" per station
+* $X$ is design matrix including covariates and confounding variables
+* no interaction terms (for now)
+
+# Initial Analysis
+
+```{r initial.analysis, echo = F}
+summary(lm(trips ~ elevation + jobden + income + Mean_Temperature_F + Precipitation_In, data = inflow.data))
+```
+
+# Challenges
+
+## Dependencies between stations
+
+* Total number of bikes remains constant
+* Complex network dependencies between stations (not good for linear regression)
+* Solution: find a subset of stations that seem independent
+    * Create a correlation matrix of residuals after regressing on confounding variables
+
+## Heatmap
+
+```{r heatmap, echo = F}
+inflow.complete <- inflow.data[!is.na(inflow.data$Mean_Temperature_F) & !is.na(inflow.data$Precipitation_In),]
+model <- lm(trips ~ Mean_Temperature_F + Precipitation_In, data = inflow.complete)
+inflow.complete$residual <- residuals(model)
+x <- unstack(inflow.complete[,c("residual", "to_station_id")])
+x$"DPD-03" <- NULL
+cor.matrix <- cor(data.frame(x))
+heatmap.2(cor.matrix, trace = "none", dendrogram = "none")
+```
+
+## Total membership
+
+* Data not included in public dataset
+* Estimate a fixed effect representing total membership for each month?
+
+# Concluding Remarks
+
+* Temperature and precipitation significantly explain variation
+* Coefficients for elevation and socio-economic factors are significant and intuitive
+* Possible method for identifying independent stations
+
+# Questions?
+
+Thanks for listening!
