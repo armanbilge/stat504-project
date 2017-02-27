@@ -4,16 +4,17 @@ author: Arman Bilge, Yanbo Ge, and Xiaoliu Wu
 date: February 27
 ---
 
+# Intro
+
 <style type="text/css">
-	.reveal h1 { font-size: 2.5em; }
-  .reveal h2 { font-size: 1.5em; }
+  .reveal h1 { font-size: 1.5em; }
+  .reveal h2 { font-size: 1.25em; }
+  .reveal { font-size: 36px; }
   img {
-    width: 640px;
-    height: 640px;
+    width: 480px;
+    height: 480px;
   }
 </style>
-
-# Intro
 
 ```{r setup, echo = F, message = F}
 knitr::opts_chunk$set(cache = F)
@@ -86,11 +87,12 @@ full.data <- merge(count.daily(trips), weather, by.x = "date", by.y = "Date")
 inflow.data <- merge(merge(count.daily.station.inflow(trips), stations, by.x = "to_station_id", by.y = "station_id"), weather, by.x = "date", by.y = "Date")
 ```
 
-<iframe src="http://willleahy.info/bikeshare/" style="width: 100%; height: 500px"></iframe>
+<div style="width: 135%; height: 500px; overflow: hidden; position: relative"><iframe id="visual" src="http://willleahy.info/bikeshare/" style="width: 200%; height: 500px; position: absolute; left: -329px"></iframe></div>
 
 # Question
 
 Which features of a station affect its daily usage?
+
 Can we use these to decide where to place stations?
 
 # Data
@@ -126,14 +128,14 @@ Can we use these to decide where to place stations?
 
 ## Temperature
 
-```{r temperature, echo = F}
+```{r temperature, echo = F, fig.cap = ''}
 plot(full.data$Mean_Temperature_F, full.data$trips)
 abline(lm(trips ~ Mean_Temperature_F, data = full.data), col = "red")
 ```
 
 ## Precipitation
 
-```{r precipitation, echo = F}
+```{r precipitation, echo = F, fig.cap = ''}
 plot(full.data$Precipitation_In, full.data$trips)
 abline(lm(trips ~ Precipitation_In, data = full.data), col = "red")
 ```
@@ -180,7 +182,7 @@ summary(lm(trips ~ elevation + jobden + income + Mean_Temperature_F + Precipitat
 
 ## Heatmap
 
-```{r heatmap, echo = F}
+```{r heatmap, echo = F, fig.cap = ''}
 inflow.complete <- inflow.data[!is.na(inflow.data$Mean_Temperature_F) & !is.na(inflow.data$Precipitation_In),]
 model <- lm(trips ~ Mean_Temperature_F + Precipitation_In, data = inflow.complete)
 inflow.complete$residual <- residuals(model)
