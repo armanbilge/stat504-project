@@ -8,6 +8,7 @@ script:
 - mkdir dist
 - mkdir -p figure
 - cp -r *.pdf *.html figure/ dist
+- echo "stat504.armanbilge.com" > dist/CNAME
 deploy:
   provider: pages
   local_dir: dist
