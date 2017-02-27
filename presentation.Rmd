@@ -1,5 +1,5 @@
 ---
-title: Bike Share Usage
+title: Seattle Bike Share Usage
 author: Arman Bilge, Yanbo Ge, and Xiaoliu Wu
 date: February 27
 ---
@@ -177,6 +177,7 @@ summary(lm(trips ~ elevation + jobden + income + Mean_Temperature_F + Precipitat
 
 * Total number of bikes remains constant
 * Complex network dependencies between stations (not good for linear regression)
+* Some stations were installed later on
 * Solution: find a subset of stations that seem independent
     * Create a correlation matrix of residuals after regressing on confounding variables
 
