@@ -17,42 +17,82 @@ date_of_ride <- sapply(date_of_ride, function(x) { x[[1]][[1]] } )
 X2016_12_trip_data <- cbind(X2016_12_trip_data, date_of_ride)
 ## Trouble found. Weather date is only upto 8/31/2016
 
-# Extract data for 2015
-date_2015 <- date_of_ride[grepl('2015', date_of_ride) ]
-month <- c(1:12)
-regex <- "%i/[0-9]?[0-9]?/"
-regex <- sprintf(regex, month)
-tf_matrix <- sapply(regex, grepl, x = date_2015)
-colnames(tf_matrix) <- month.name
-month_bike_rentals <- apply(tf_matrix, 2, table)[2, ]
 
-# Visually check the distribution
-plot(month_bike_rentals, main = "Number of People Using Bike Rentals in 2015", 
-     xlab = "Month", ylab = "Number of People")
+###################################
+## Check usage of stations and features of stations
+## Response is the inflow number of stations
+## Get the date frame for inflow number
+# Truncate data
+dt <- X2016_12_trip_data[1:tail(which(X2016_12_trip_data$date_of_ride == "2016-08-31"),1), ]
+each_day_dest_number_array <- tapply(dt$to_station_name, dt$date_of_ride, table)
+d <- lapply(each_day_dest_number_array, as.data.frame)
+inflow_data <- do.call(cbind, d)
+street_name <- inflow_data[,1]
+inflow_data <- inflow_data[, !sapply(inflow_data, is.factor)]
+
+# Transpose it
+# change the row and col names
+inflow_data <- t(inflow_data)
+colnames(inflow_data) <- street_name
+date_name <- rownames(inflow_data)
+date_name <- strsplit(date_name, "\\.")
+date_name <- sapply(date_name, function(x) {x[[1]]})
+inflow_data <- as.data.frame(inflow_data)
+rownames(inflow_data) <- date_name
 
 
-# Extract different info for gender
-# We truncate the data at 8/31/2016
-data_gender_noNA <- X2016_12_trip_data[1:tail(which(X2016_12_trip_data$date_of_ride == "8/31/2016"),1), ]
-data_gender_noNA <- data_gender_noNA[data_gender_noNA$gender %in% c("Male", "Female"), ]
-data_gender_noNA$date_of_ride <- factor(data_gender_noNA$date_of_ride)
-data_gender_noNA$date_of_ride <- as.Date(data_gender_noNA$date_of_ride, "%m/%d/%Y")
-male_female_ratio <- tapply(data_gender_noNA$gender, INDEX = data_gender_noNA$date_of_ride, FUN = function(x) {
-  sum(x == "Male") / length(x)
-})
+# Get data for regression on weather
+t_inflow_data <- inflow_data[1:689,-23]
+#inflow_data_trun <- inflow_data[1 : length(X2016_weather_data$Date), ]
+inflow_list_turn <- unlist(t_inflow_data[,-1])
+weather_repeated <- X2016_weather_data[rep(rownames(X2016_weather_data), ncol(t_inflow_data)-1), ]
+station_in_weather <- cbind(inflow_list_turn, weather_repeated)
+
+# do regression
+l <- lm(station_in_weather$inflow_list_turn ~ station_in_weather$Mean_Temperature_F +
+        station_in_weather$Precipitation_In)
+summary(l)
+hist(cor(inflow_data[,-1]))
+summary(as.vector(cor(inflow_data[,-1])))
+
+## Check equal variance assumption
+# Dump data which has different installation date and decomissioned
+## Notice "Lake Union Park / Westlake Ave & Aloha St"   in the orginal data set is at row 59!!!
+X2016_12_station_data <-X2016_12_station_data[order(X2016_12_station_data$name),] 
+which(!X2016_12_station_data$name  %in% colnames(inflow_data) )
+X2016_12_station_data<- X2016_12_station_data[-which(!X2016_12_station_data$name  %in% colnames(inflow_data) ), ]
+tf <- X2016_12_station_data$install_date == "10/13/2014" & 
+  X2016_12_station_data$decommission_date == ""
+inflow_var <- inflow_data[,tf]
+
+
+variance <- apply(inflow_var, 2, var)
+me <- apply(inflow_var,2, mean)
 
 # Visual check
-hist(male_female_ratio)
+plot(me, variance)
+which(va == max(va))
+plot(table(inflow_data$`Pier 69 / Alaskan Way & Clay St`))
 
-# Fit model
+# Transformation
+plot(log(variance), log(me))
+trans_lm <- lm(log(variance) ~ log(me))
+#inflow_var_trans <- (inflow_var[,-1]+1)^(1-1.1203)
+inflow_var_trans <- (log(inflow_var+1))
+variance <- apply(inflow_var_trans, 2, var)
+me <- apply(inflow_var_trans,2, mean)
+plot(me, variance)
+max(variance) / min(variance)
 
-pairs(test)
-test <- cbind(male_female_ratio, X2016_weather_data$Mean_Temperature_F, 
-              X2016_weather_data$MeanDew_Point_F, X2016_weather_data$Mean_Humidity, 
-              X2016_weather_data$Mean_Sea_Level_Pressure_In, X2016_weather_data$Mean_Visibility_Miles, 
-              X2016_weather_data$Mean_Wind_Speed_MPH, X2016_weather_data$Max_Gust_Speed_MPH,
-              X2016_weather_data$Precipitation_In)
-pairs(test)
-test <- as.data.frame(test)
-m <- lm(male_female_ratio~. ,data = test)
-summary(m)
+
+# Hist before tranformation
+par(mfrow= c(3,3))
+apply(inflow_var,2, function(x) {plot(table(x))})
+# Hist after tranformation
+par(mfrow= c(3,3))
+apply(inflow_var_trans,2,function(x) {plot(table(x))} )
+
+tme <- me[order(variance)]
+tme <- tme[1:40]
+tvar <- variance[order(variance)]
+tvar <- tvar[1:40]
