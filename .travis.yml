@@ -5,6 +5,7 @@ script:
 - rake proposal.pdf
 - rake proposal.html
 - rake presentation.html
+- rake poster.pdf
 - mkdir dist
 - mkdir -p figure
 - cp -r *.pdf *.html figure/ dist

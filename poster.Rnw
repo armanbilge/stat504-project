@@ -1,0 +1,432 @@
+\documentclass[]{tikzposter}
+\tikzposterlatexaffectionproofoff
+\geometry{paperwidth=48in,paperheight=36in}
+\makeatletter
+\setlength{\TP@visibletextwidth}{47in}
+\setlength{ \TP@visibletextheight}{36in}
+\makeatother
+
+\usepackage{amsmath,amsfonts,amssymb}
+
+\usepackage{hyperref}
+\usepackage{doi}
+\usepackage{qrcode}
+
+\makeatletter
+\renewcommand\TP@maketitle{%
+   \begin{minipage}{0.9\linewidth}
+        \color{titlefgcolor}
+        {\bfseries \fontsize{100}{100}\selectfont \sc \@title \par}
+        \vspace*{1em}
+        {\huge \@author \par}
+        \vspace*{1em}
+        {\LARGE \@institute}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.1\linewidth}
+       \centering
+       \begin{tikzpicture}[y=0.80pt, x=0.80pt, yscale=-1.000000, xscale=1.000000, inner sep=0pt, outer sep=0pt, scale=3.5]
+         \path[fill=white,nonzero rule] (79.2578,0.0000) .. controls (79.2578,0.8594)
+           and (79.2578,12.2383) .. (79.2578,13.0977) .. controls (80.1133,13.0977) and
+           (88.4648,13.0977) .. (88.4648,13.0977) -- (78.1875,51.3477) .. controls
+           (78.1875,51.3477) and (65.6094,0.7148) .. (65.4297,0.0000) .. controls
+           (64.7422,0.0000) and (52.8047,0.0000) .. (52.1289,0.0000) .. controls
+           (51.9414,0.6953) and (38.3320,51.3516) .. (38.3320,51.3516) --
+           (28.8672,13.0977) .. controls (28.8672,13.0977) and (37.5938,13.0977) ..
+           (38.4531,13.0977) .. controls (38.4531,12.2383) and (38.4531,0.8594) ..
+           (38.4531,0.0000) .. controls (37.5312,0.0000) and (0.9180,0.0000) ..
+           (0.0000,0.0000) .. controls (0.0000,0.8594) and (0.0000,12.2383) ..
+           (0.0000,13.0977) .. controls (0.8516,13.0977) and (8.5195,13.0977) ..
+           (8.5195,13.0977) .. controls (8.5195,13.0977) and (23.2227,71.9062) ..
+           (23.4023,72.6211) .. controls (24.1094,72.6211) and (43.3438,72.6211) ..
+           (44.0391,72.6211) .. controls (44.2227,71.9219) and (53.8906,35.1641) ..
+           (53.8906,35.1641) .. controls (53.8906,35.1641) and (63.0781,71.9141) ..
+           (63.2578,72.6211) .. controls (63.9648,72.6211) and (83.1992,72.6211) ..
+           (83.8945,72.6211) .. controls (84.0820,71.9180) and (99.5508,13.0977) ..
+           (99.5508,13.0977) .. controls (99.5508,13.0977) and (107.1484,13.0977) ..
+           (108.0000,13.0977) .. controls (108.0000,12.2383) and (108.0000,0.8594) ..
+           (108.0000,0.0000) .. controls (107.0938,0.0000) and (80.1680,0.0000) ..
+           (79.2578,0.0000);
+
+       \end{tikzpicture}
+
+    \end{minipage}
+}
+\makeatother
+
+\title{Station Usage in Seattle Bike Share}
+\author{Arman Bilge\textsuperscript{1,2}, Yanbo Ge\textsuperscript{3}, and Xiaoliu Wu\textsuperscript{2}}
+\institute{\textsuperscript{1}Computational Biology Program, Fred Hutchinson Cancer Research Center and Departments of \textsuperscript{2}Statistics and  \textsuperscript{3}Civil and Environmental Engineering, University of Washington}
+
+\defineblockstyle{MySlide}{
+    titlewidthscale=1, bodywidthscale=1, titleleft,
+    titleoffsetx=0pt, titleoffsety=0pt, bodyoffsetx=0pt, bodyoffsety=0pt,
+    bodyverticalshift=0pt, roundedcorners=0, linewidth=0pt, titleinnersep=1cm,
+    bodyinnersep=1cm
+}{
+    \ifBlockHasTitle%
+        \draw[draw=none, left color=blocktitlebgcolor, right color=blocktitlebgcolor]
+           (blocktitle.south west) rectangle (blocktitle.north east);
+    \fi%
+    \draw[draw=none, fill=blockbodybgcolor] %
+        (blockbody.north west) [rounded corners=30] -- (blockbody.south west) --
+        (blockbody.south east) [rounded corners=0]-- (blockbody.north east) -- cycle;
+}
+
+\usetheme{Autumn}
+\usecolorstyle{Russia}
+\definecolor{uwpurple}{RGB}{51,0,111}
+\definecolor{uwgold}{RGB}{232,211,162}
+\definecolor{uwmetallicgold}{RGB}{145,123,76}
+\colorlet{titlebgcolor}{uwpurple}
+\colorlet{blocktitlebgcolor}{uwmetallicgold}
+\useblockstyle{MySlide}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{sfmath}
+
+\usepackage{multicol}
+\usepackage{enumitem}
+\setlist[itemize]{label=$\triangleright$, labelsep=12pt}
+
+\usepackage{accents}
+\newcommand{\utilde}[1]{\underaccent{\tilde}{#1}}
+
+\usepackage[none]{hyphenat}
+\frenchspacing
+
+\begin{document}
+
+    <<setup, echo = F, message = F>>=
+      knitr::opts_chunk$set(cache = T)
+      set.seed(666)
+      library(caret)
+      library(chron)
+      library(gplots)
+      library(ggmap)
+      library(httr)
+      library(jsonlite)
+      library(plyr)
+      library(texreg)
+      API_KEY <- "AIzaSyAnu1sbEOUwfv2s4IfLyLYvSrn4ODMZSy4"
+      stations <- read.csv("2016_station_data.csv", fill = T, header = T)
+      trips <- read.csv("2016_trip_data.csv", fill = T, header = T)
+      weather <- read.csv("2016_weather_data.csv", fill = T, header = T)
+      census <- read.csv("neighborhood_variables.csv", fill = T, header = T)
+    @
+
+    <<elevation, echo = F>>=
+      with.elevation <- function(df) {
+        base.url <- "https://maps.googleapis.com/maps/api/elevation/json"
+        positions <- apply(df, 1, function(row) paste(row["lat"], ",", row["long"], sep = ""))
+        url <- httr:::handle_url(url = base.url, query = list(key = API_KEY, locations = paste(positions, collapse = "|")))$url
+        df$elevation <- fromJSON(url)$results$elevation
+        return(df)
+      }
+      stations <- with.elevation(stations)
+      stations$elevation <- stations$elevation / 1000
+    @
+
+    <<census, echo = F>>=
+      census$name <- NULL
+      census$popden <- census$popden / 1000
+      census$jobden <- census$jobden / 1000
+      census$income <- census$income / 10000
+      census$transportation_distance <- census$transportation_distance / 10000
+      stations <- merge(stations, census, all = T, by = "station_id")
+    @
+
+    <<filters, echo = F>>=
+      members.only <- function(df) subset(df, usertype == "Member")
+      strip.times <- function(df) {
+        df$starttime <- as.Date(df$starttime)
+        df$stoptime <- as.Date(df$stoptime)
+        return(df)
+      }
+      weekdays.only <- function(df) subset(df, weekend == F)
+    @
+
+    <<datetime, echo = F>>=
+      parse.datetime <- function(df) {
+        df$starttime <- strptime(as.character(df$starttime), "%m/%d/%Y %H:%M")
+        df$stoptime <- strptime(as.character(df$stoptime), "%m/%d/%Y %H:%M")
+        df$weekend <- is.weekend(df$starttime)
+        return(df)
+      }
+      trips <- parse.datetime(trips)
+
+      parse.date <- function(df) {
+        df$Date <- as.Date(as.character(df$Date), "%m/%d/%Y")
+        return(df)
+      }
+      weather <- parse.date(weather)
+
+      parse.commission.dates <- function(df) {
+        df$install_date <- as.Date(as.character(df$install_date), "%m/%d/%Y")
+        df$decommission_date <- as.Date(as.character(df$decommission_date), "%m/%d/%Y")
+        df$decommission_date[is.na(df$decommission_date)] <- as.Date("3/31/2017", "%m/%d/%Y")
+        return(df)
+      }
+      stations <- parse.commission.dates(stations)
+    @
+
+    <<full_data, echo = F>>=
+      count.daily <- function(df) aggregate(list(trips = df$trip_id), by = list(date = df$starttime), FUN = length)
+      count.daily.station.inflow <- function(df) {
+        df <- aggregate(list(trips = df$trip_id), by = list(date = df$starttime, to_station_id = df$to_station_id), FUN = length)
+        product <- expand.grid(to_station_id = unique(df$to_station_id), date = unique(df$date))
+        df <- merge(df, product, all = T)
+        df <- merge(df, stations, by.x = "to_station_id", by.y = "station_id")
+        df.na <- subset(df, is.na(trips))
+        df$trips[is.na(df$trips)] <- ifelse(df.na$install_date <= df.na$date & df.na$date <= df.na$decommission_date, 0, NA)
+        df$trips <- log(1 + df$trips)
+        return(df)
+      }
+      count.daily.station.outflow <- function(df) {
+        df <- aggregate(list(trips = df$trip_id), by = list(date = df$starttime, from_station_id = df$from_station_id), FUN = length)
+        product <- expand.grid(from_station_id = unique(df$from_station_id), date = unique(df$date))
+        df <- merge(df, product, all = T)
+        df <- merge(df, stations, by.x = "from_station_id", by.y = "station_id")
+        df.na <- subset(df, is.na(trips))
+        df$trips[is.na(df$trips)] <- ifelse(df.na$install_date <= df.na$date & df.na$date <= df.na$decommission_date, 0, NA)
+        df$trips <- log(1 + df$trips)
+        return(df)
+      }
+      trips <- weekdays.only(strip.times(trips))
+      full.data <- merge(count.daily(trips), weather, by.x = "date", by.y = "Date")
+      inflow.data <- merge(count.daily.station.inflow(trips), weather, by.x = "date", by.y = "Date")
+      outflow.data <- merge(count.daily.station.outflow(trips), weather, by.x = "date", by.y = "Date")
+    @
+
+    \maketitle
+
+    \begin{columns}
+
+        \column{0.3}
+
+        \block{Background}{
+          \begin{itemize}
+            \item Pronto! has been Seattle's bike share system for 2 years
+            \item Users must start and end their trips at various stations across the city
+            \item Program is shutting down at the end of March due to insufficient use
+            \item Many reasons suggested for its failure; e.g., poor placement of stations
+          \end{itemize}
+          \vspace{6pt}
+          \textbf{Questions}
+          \begin{itemize}
+            \item Which features of a station affect its daily usage?
+            \item Can we use these to decide where to place stations?
+          \end{itemize}
+        }
+
+        \block{Data}{
+          \begin{itemize}
+            \item Pronto! (October 2014--August 2016)
+            \begin{itemize}
+              \item record for every trip taken ($\Sexpr{nrow(trips)}$ trips in total)
+              \item daily weather report (temperature, precipitation, wind, etc.)
+            \end{itemize}
+            \item Google Maps API
+            \begin{itemize}
+              \item elevation
+              \item nearby points-of-interest (transportation, etc.)
+            \end{itemize}
+            \item Puget Sound Regional Council Census
+            \begin{itemize}
+              \item socio-economic data (population density, job density, income, etc.)
+            \end{itemize}
+          \end{itemize}
+        }
+
+        \block{Challenges (and solutions)}{
+          \begin{itemize}
+            \item Stark contrast between weekday and weekend usage patterns
+            \begin{itemize}
+              \item Only analyze data from weekdays
+            \end{itemize}
+            \item Overall system usage depends heavily on daily weather
+            \begin{itemize}
+              \item Control for temperature and precipitation in our model
+            \end{itemize}
+            \item Some stations were decomissioned or installed at later dates
+            \begin{itemize}
+              \item Remove stations that have been active for less than 20\% of time frame
+            \end{itemize}
+            \item System has complex, network dependencies between stations
+            \begin{itemize}
+              \item Only count daily departures (and not arrivals) per station, called \emph{outflow}
+              \item Try to find a subset of independent stations
+            \end{itemize}
+            \item No data on total membership of the system
+            \begin{itemize}
+              \item Conceded limitation of our analysis
+            \end{itemize}
+          \end{itemize}
+        }
+
+        \block{Assumptions}{
+          \raggedright
+          Let $\utilde{y}_i = \left[y_{ij}\right]^\intercal$, where $y_{ij}$ is the (transformed) total outflow of the $j$th station on the $i$th day. Then we assume that
+          $$
+            \utilde{y}_i = X\utilde{\beta}_s + \utilde{w}_i^\intercal \utilde{\beta}_w \utilde{1} + \utilde{\epsilon}_i, \utilde{\epsilon}_i \sim \mathcal{N}\left(\utilde{0}, \Sigma\right)
+          $$
+          where $X$ are the station features and $\utilde{w}_i$ is the weather for the $i$th day.
+          Note that we do not assume $\Sigma$ is diagonal to account for inter-station correlations.
+
+          Suppose we find a set of stations $S_\delta$ such that $\forall i,j \in S_\delta : \sigma_{ij} < \delta$.
+          Then our model simplifies to
+          $$
+            y_{ij} \approx \utilde{x}_j\utilde{\beta}_s + \utilde{w}_i^\intercal \utilde{\beta}_w + \epsilon_ij, \epsilon_ij \sim \mathcal{N}\left(0, \sigma_{jj}\right)
+          $$
+        }
+
+        \column{0.4}
+
+        \block{Results}{
+
+          \begin{minipage}[t]{\linewidth}
+
+          \begin{minipage}[t]{0.65\linewidth}
+
+          <<map, echo=F, message = F, warning = F, fig.width=12, fig.height=12>>=
+            unstack.flow <- function(df, col) {
+              df.complete <- df[!is.na(df$Mean_Temperature_F) & !is.na(df$Precipitation_In),]
+              model <- lm(trips ~ Mean_Temperature_F + Precipitation_In, data = df.complete)
+              df.complete$residuals <- df$trips - predict(model, df.complete)
+              x <- data.frame(unstack(df.complete[,c("residuals", col)]))
+              stations.keep <- apply(x, 2, function(x) sum(is.na(x))) / nrow(x) < 0.8
+              stations.subset <- stations[stations.keep,]
+              x <- x[,stations.keep]
+              return(list("unstacked" = x, "stations" = stations.subset))
+            }
+            calculate.cor <- function(df) {
+              cor.matrix <- cor(df, use="pairwise.complete.obs")
+              cor.matrix[is.na(cor.matrix)] <- 0
+              return(cor.matrix)
+            }
+            tmp <- unstack.flow(inflow.data, "to_station_id")
+            stations.subset <- tmp$stations
+            inflow.unstacked <- tmp$unstacked
+            outflow.unstacked <- unstack.flow(outflow.data, "from_station_id")$unstacked
+            inflow.cor.matrix <- calculate.cor(inflow.unstacked)
+            outflow.cor.matrix <- calculate.cor(outflow.unstacked)
+            stations.inflow.ind <- stations.subset[-findCorrelation(inflow.cor.matrix, 0.2),]
+            stations.outflow.ind <- stations.subset[-findCorrelation(outflow.cor.matrix, 0.2),]
+            gg <- qmap(c(left = -122.36, bottom = 47.595, right = -122.28, top = 47.67), zoom=13, maptype="toner-background", darken=c(0.92, "#FFFFFF"), size = c(10000, 10000))
+            gg <- gg + geom_point(data = stations, aes(x = long, y = lat), color="#4b2e83", size=8)
+            #gg <- gg + geom_point(data = stations.inflow.ind, aes(x = long, y = lat), color="#b7a57a", size=8)
+            gg <- gg + geom_point(data = stations.outflow.ind, aes(x = long, y = lat), color="#b7a57a", size=8)
+            gg
+          @
+
+          \end{minipage}
+          \begin{minipage}[t]{0.35\linewidth}
+
+          <<heatmap, echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+            heatmap.2(outflow.cor.matrix, trace = "none", dendrogram = "none", key = F, lhei=c(0.2,4), lwid=c(0.2,4))
+          @
+
+          <<decay, echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+            plot(1:100/100, sapply(1:100/100,function(x) nrow(stations.subset) - length(findCorrelation(outflow.cor.matrix, x))), xlab = "correlation threshold", ylab="independent stations", cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5, cex=3.0, type="l", lwd=4, col="#4b2e83")
+            abline(v = 0.2, lwd=4, lty="dashed", col="#b7a57a")
+          @
+          \end{minipage}
+
+          \end{minipage}
+
+          \begin{multicols}{2}
+
+            <<weather, echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+              plot(full.data$Mean_Temperature_F, full.data$trips, xlab = "mean temperature", ylab = "total trips taken", lwd=4, cex=3.0, col="#4b2e83", cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5)
+            @
+
+            <<residuals, echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+            final.model <- lm(trips ~ elevation + popden + jobden + income + number_transportation + transportation_distance + searchable + Mean_Temperature_F + Precipitation_In, data = outflow.data)
+              qqnorm(residuals(final.model), cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5, cex=3.0, lwd=4, col="#4b2e83")
+              abline(0, 1, col="#b7a57a", lwd=4, lty="dashed")
+            @
+
+            <<table, results='asis', echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+              texreg(final.model, digits=3, table = F, single.row = T, caption = NULL, custom.coef.names = c("(Intercept)", "elevation", "population density", "job density", "income", "number metro routes", "distance to metro", "listed on Google maps", "mean temp.", "precip."))
+            @
+
+            <<fitted, echo=F, message = F, warning = F, fig.width=8, fig.height=8>>=
+              plot(final.model$fitted.values, residuals(final.model), cex.lab=1.5, cex.axis=1.5, cex.main=1.5, cex.sub=1.5, cex=3.0, lwd=4, col="#4b2e83", xlab="fitted values", ylab="residuals")
+            @
+
+          \end{multicols}
+
+        }
+
+        \column{0.3}
+
+        \block{Methods}{
+          \raggedright
+          \begin{enumerate}
+            \item log-transform the per-station daily outflow to stabilize variance
+            \item Following technique for seemingly unrelated regression (SUR):
+            \begin{enumerate}
+              \item Regress on weather covariates using ordinary least squares (OLS)
+              \item Estimate $\hat\Sigma$ from the residuals
+            \end{enumerate}
+            \item Use $\hat\Sigma$ to select independent subset of stations $S_\delta$ (e.g., with a connected-components algorithm)
+            \item Fit model with station features and weather covariates to data from selected stations using OLS
+          \end{enumerate}
+        }
+
+        \block{Validation}{
+          \begin{itemize}
+            \item Two independent code bases gave identical results
+            \item Although not exactly normallly distributed, residuals are symmetric
+            \item Transformed observations demonstrate homoscedasticity (constant variance)
+          \end{itemize}
+        }
+
+        \block{Concluding Remarks}{
+         \raggedright
+          \begin{itemize}
+            \item Linear regression is a challenging framework for analyzing a network; we appropriately subsampled our data to minimize violation of assumptions
+            \item Controlling for weather, all station features considered were significant
+            \begin{itemize}
+              \item Surprisingly, elevation was negative correlated with departures
+              \item Station proximity to transit decreased departures
+              \item Also surprisingly, stations listed on Google maps had decreased outflow
+            \end{itemize}
+            \item Future work should analyze \emph{inflow} (i.e., daily number of arrivals per station) and compare to our results
+          \end{itemize}
+        }
+
+        \block{References and Acknowledgements}{
+          T Amemiya (1985). \emph{Advanced econometrics}. Harvard University Press. \\
+          E Fishman (2016). \emph{Transport Reviews}, 36:92--113. \\
+          K Gebhard and RB Noland (2013). \emph{Transporation Research Board} 92. \\
+          D Kahle and H Wickham (2013). \emph{The R Journal} 5:144--161. \\
+          DJ Kim et al. (2012). \emph{Transporation Research Board} 91. \\
+          P Leifeld (2013). \emph{Journal of Statistical Software}, 55:1--24. \\
+          A Small (2017). The Four Horsemen of the Bike Share Apocalypse. \emph{CityLab}.
+          \\[10pt]
+          Thanks to Elena Erosheva and Michael Karcher for helpful discussions and our STAT 504 class for their feedback.
+        }
+
+      \block{}{
+          \begin{multicols*}{2}
+
+              \flushleft
+
+              \qrcode[height=6cm]{http://git.io/vyPjX}
+              Download this poster
+
+              \vspace{25pt} \url{https://git.io/vyPjX}
+
+              \columnbreak
+
+              \qrcode[height=6cm]{http://git.io/vyPjw}
+              Fork the source code
+
+              \vspace{25pt} \url{http://git.io/vyPjw}
+
+          \end{multicols*}
+      }
+
+    \end{columns}
+
+\end{document}

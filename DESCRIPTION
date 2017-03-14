@@ -1,7 +1,10 @@
 Imports:
     knitr,
+    caret,
     chron,
     gplots,
+    ggmap,
     httr,
     jsonlite,
-    plyr
+    plyr,
+    texreg
