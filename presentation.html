@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Arman Bilge, Yanbo Ge, and Xiaoliu Wu">
+  <title>Seattle Bike Share Usage</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="http://lab.hakim.se/reveal-js/css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="http://lab.hakim.se/reveal-js/css/theme/sky.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'http://lab.hakim.se/reveal-js/css/print/pdf.css' : 'http://lab.hakim.se/reveal-js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="http://lab.hakim.se/reveal-js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.6.0/katex.min.css" /><script type="text/javascript">window.onload = function(){var mathElements = document.getElementsByClassName("math");
+  for (var i=0; i < mathElements.length; i++)
+  {
+   var texText = mathElements[i].firstChild
+   katex.render(texText.data, mathElements[i])
+  }}
+  </script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+  <h1 class="title">Seattle Bike Share Usage</h1>
+  <p class="author">Arman Bilge, Yanbo Ge, and Xiaoliu Wu</p>
+  <p class="date">February 27</p>
+</section>
+
+<section id="intro" class="slide level1">
+<h1>Intro</h1>
+<style type="text/css">
+  .reveal h1 { font-size: 1.5em; }
+  .reveal h2 { font-size: 1.25em; }
+  .reveal { font-size: 36px; }
+  img {
+    width: 480px;
+    height: 480px;
+  }
+</style>
+<div style="width: 135%; height: 500px; overflow: hidden; position: relative">
+<iframe id="visual" src="http://willleahy.info/bikeshare/" style="width: 200%; height: 500px; position: absolute; left: -329px">
+</iframe>
+</div>
+</section>
+<section id="question" class="slide level1">
+<h1>Question</h1>
+<p>Which features of a station affect its daily usage?</p>
+<p>Can we use these to decide where to place stations?</p>
+</section>
+<section id="data" class="slide level1">
+<h1>Data</h1>
+<section id="sources" class="level2">
+<h2>Sources</h2>
+<ul>
+<li>Pronto! (October 2014–August 2016)
+<ul>
+<li>record for every trip taken</li>
+<li>daily weather report</li>
+</ul></li>
+<li>Google Maps API
+<ul>
+<li>elevation</li>
+<li>nearby points-of-interest</li>
+</ul></li>
+<li>Puget Sound Regional Council Census
+<ul>
+<li>socio-economic data</li>
+</ul></li>
+</ul>
+</section>
+<section id="covariates-of-interest" class="level2">
+<h2>Covariates of Interest</h2>
+<ul>
+<li>elevation</li>
+<li>job density</li>
+<li>average income</li>
+<li>also hope to use:
+<ul>
+<li>number of nearby restaurants</li>
+<li>number of bus routes at nearest stop</li>
+</ul></li>
+</ul>
+</section>
+<section id="confounding-variables" class="level2">
+<h2>Confounding Variables</h2>
+<ul>
+<li>weather
+<ul>
+<li>temperature</li>
+<li>precipitation</li>
+</ul></li>
+<li>total membership (not in data!)</li>
+</ul>
+</section>
+</section>
+<section id="exploration" class="slide level1">
+<h1>Exploration</h1>
+<section id="temperature" class="level2">
+<h2>Temperature</h2>
+<figure>
+<img src="figure/temperature-1.svg" />
+</figure>
+</section>
+<section id="precipitation" class="level2">
+<h2>Precipitation</h2>
+<figure>
+<img src="figure/precipitation-1.svg" />
+</figure>
+</section>
+<section id="estimates" class="level2">
+<h2>Estimates</h2>
+<pre><code>## 
+## Call:
+## lm(formula = trips ~ Mean_Temperature_F + Precipitation_In, data = full.data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -261.60  -51.36   -6.14   46.79  529.79 
+## 
+## Coefficients:
+##                     Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        -193.0187    20.4390  -9.444   &lt;2e-16 ***
+## Mean_Temperature_F   10.0706     0.3486  28.887   &lt;2e-16 ***
+## Precipitation_In   -186.8764    16.2154 -11.525   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 78.12 on 490 degrees of freedom
+## Multiple R-squared:  0.6995, Adjusted R-squared:  0.6983 
+## F-statistic: 570.3 on 2 and 490 DF,  p-value: &lt; 2.2e-16</code></pre>
+</section>
+</section>
+<section id="methods" class="slide level1">
+<h1>Methods</h1>
+<section id="section" class="level2">
+<h2></h2>
+<ul>
+<li>Dropped weekends</li>
+<li>Counted number of daily arrivals per station</li>
+<li>Fit linear model with weather and covariates of interest</li>
+<li>Two independent code bases give same results</li>
+</ul>
+</section>
+<section id="model" class="level2">
+<h2>Model</h2>
+<p><span class="math display">\displaystyle 
+y \sim \beta X + \epsilon, \epsilon \sim \mathcal{N}(0, \sigma I)
+</span></p>
+<ul>
+<li><span class="math inline">y</span> is daily &quot;in-flow&quot; per station</li>
+<li><span class="math inline">X</span> is design matrix including covariates and confounding variables</li>
+<li>no interaction terms (for now)</li>
+</ul>
+</section>
+</section>
+<section id="initial-analysis" class="slide level1">
+<h1>Initial Analysis</h1>
+<pre><code>## 
+## Call:
+## lm(formula = trips ~ elevation + jobden + income + Mean_Temperature_F + 
+##     Precipitation_In, data = inflow.data)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -16.332  -3.278  -0.578   2.311  58.335 
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)        -6.139e+00  2.005e-01  -30.62   &lt;2e-16 ***
+## elevation          -3.638e-02  9.479e-04  -38.38   &lt;2e-16 ***
+## jobden              1.108e-05  3.555e-07   31.16   &lt;2e-16 ***
+## income              6.315e-05  1.045e-06   60.42   &lt;2e-16 ***
+## Mean_Temperature_F  1.707e-01  3.127e-03   54.59   &lt;2e-16 ***
+## Precipitation_In   -3.167e+00  1.454e-01  -21.78   &lt;2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 5.382 on 29081 degrees of freedom
+## Multiple R-squared:  0.2827, Adjusted R-squared:  0.2825 
+## F-statistic:  2292 on 5 and 29081 DF,  p-value: &lt; 2.2e-16</code></pre>
+</section>
+<section id="challenges" class="slide level1">
+<h1>Challenges</h1>
+<section id="dependencies-between-stations" class="level2">
+<h2>Dependencies between stations</h2>
+<ul>
+<li>Total number of bikes remains constant</li>
+<li>Complex network dependencies between stations (not good for linear regression)</li>
+<li>Some stations were installed later on</li>
+<li>Solution: find a subset of stations that seem independent
+<ul>
+<li>Create a correlation matrix of residuals after regressing on confounding variables</li>
+</ul></li>
+</ul>
+</section>
+<section id="heatmap" class="level2">
+<h2>Heatmap</h2>
+<figure>
+<img src="figure/heatmap-1.svg" />
+</figure>
+</section>
+<section id="total-membership" class="level2">
+<h2>Total membership</h2>
+<ul>
+<li>Data not included in public dataset</li>
+<li>Estimate a fixed effect representing total membership for each month?</li>
+</ul>
+</section>
+</section>
+<section id="concluding-remarks" class="slide level1">
+<h1>Concluding Remarks</h1>
+<ul>
+<li>Temperature and precipitation significantly explain variation</li>
+<li>Coefficients for elevation and socio-economic factors are significant and intuitive</li>
+<li>Possible method for identifying independent stations</li>
+</ul>
+</section>
+<section id="questions" class="slide level1">
+<h1>Questions?</h1>
+<p>Thanks for listening!</p>
+</section>
+    </div>
+  </div>
+
+  <script src="http://lab.hakim.se/reveal-js/lib/js/head.min.js"></script>
+  <script src="http://lab.hakim.se/reveal-js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'http://lab.hakim.se/reveal-js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'http://lab.hakim.se/reveal-js/plugin/zoom-js/zoom.js', async: true },
+              { src: 'http://lab.hakim.se/reveal-js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>

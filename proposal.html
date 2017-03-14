@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <meta name="author" content="Arman Bilge, Yanbo Ge, and Xiaoliu Wu">
+  <title>Stat 504 Project Proposal</title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <!--[if lt IE 9]>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv-printshiv.min.js"></script>
+  <![endif]-->
+</head>
+<body>
+<header>
+<h1 class="title">Stat 504 Project Proposal</h1>
+<p class="author">Arman Bilge, Yanbo Ge, and Xiaoliu Wu</p>
+<p class="date">February 8</p>
+</header>
+<p></p>
+<p>The city of Seattle recently announced that its bike-sharing service, Pronto, will be terminated this March. Several potential causes of the low ridership that led to the program's failure have been proposed, including Seattle's weather, topography, and the location of bike stations <span class="citation" data-cites="Sma17">(Small 2017)</span>. Furthermore, previous studies have shown that the proximity of stations to alternative transportation options and commercial and residential buildings are significant predictors of a system's usage <span class="citation" data-cites="Fis16 GN13 KSI+12">(Fishman 2016; Gebhart and Noland 2013; Kim et al. 2012)</span>. We want to understand which of the aforementioned factors affect Pronto ridership in Seattle. Not only can our analysis help understand why Pronto failed, it may also facilitate the design and implementation of more effective bike-sharing services in the future.</p>
+<p>Pronto provides open data for public use.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> Their 2016 dataset includes the last two years of trip data (263136 trips in total), including each trip's start and end date, time, and station and the biker's gender and year of birth if they are an annual member. They also include daily weather data, including summary statistics of temperature, dewpoint, humidity, barometric pressure, visibility, wind speed, and precipitation. To better appreciate the location features of a particular station, we are augmenting the Pronto-provided dataset with data from the Google Maps API<a href="#fn2" class="footnoteRef" id="fnref2"><sup>2</sup></a> (e.g., elevation and nearby points-of-interest) for each bike-share station.</p>
+<p>The outcome variable for our regression analysis will be the daily frequency of a particular trip, where a trip is defined by its start and end stations. Data in a bike share system is structured by the fact that the total number of bikes must remain constant, and thus that the total number of arrivals and departures must be equal. By choosing to count trips, we hope to circumvent this structure. Another potential complication is that the number of members in the system is an important covariate that is not currently provided in the Pronto dataset.</p>
+<h2 id="references" class="unnumbered">References</h2>
+<div id="refs" class="references">
+<div id="ref-Fis16">
+<p>Fishman, Elliot. 2016. “Bikeshare: A Review of Recent Literature.” In <em>Transport Reviews</em>, 36:92–113. doi:<a href="https://doi.org/10.1080/01441647.2015.1033036">10.1080/01441647.2015.1033036</a>.</p>
+</div>
+<div id="ref-GN13">
+<p>Gebhart, Kyle, and Robert B. Noland. 2013. “The Impact of Weather Conditions on Capital Bikeshare Trips.” In <em>TRB 92nd Annual Meeting Compendium of Papers</em>. <a href="https://trid.trb.org/view.aspx?id=1240556" class="uri">https://trid.trb.org/view.aspx?id=1240556</a>.</p>
+</div>
+<div id="ref-KSI+12">
+<p>Kim, DongJun, HeeCheol Shin, Hyeongjun Im, and Junsik Park. 2012. “Factors Influencing Travel Behaviors in Bikesharing.” In <em>TRB 91st Annual Meeting Compendium of Papers</em>. <a href="https://trid.trb.org/view.aspx?id=1129171" class="uri">https://trid.trb.org/view.aspx?id=1129171</a>.</p>
+</div>
+<div id="ref-Sma17">
+<p>Small, Andrew. 2017. “The Four Horsemen of the Bike Share Apocalypse.” <em>CityLab</em>, January 31. <a href="http://www.citylab.com/commute/2017/01/seattle-bike-share-pronto-goes-under/513575/" class="uri">http://www.citylab.com/commute/2017/01/seattle-bike-share-pronto-goes-under/513575/</a>.</p>
+</div>
+</div>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p><code>https://www.prontocycleshare.com/data</code><a href="#fnref1">↩</a></p></li>
+<li id="fn2"><p><code>https://developers.google.com/maps/</code><a href="#fnref2">↩</a></p></li>
+</ol>
+</section>
+</body>
+</html>
