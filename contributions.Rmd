@@ -1,0 +1,8 @@
+# Contributions
+
+All members contributed equally to the project.
+Every member identified and collected data (Arman: bike share and Google maps; Yanbo: socio-economic; Xiaoliu: transportation).
+Each also processed and analyzed the data independently to validate the results.
+As a group, we made decisions about the data and discussed our model, its assumptions, and interpreted our results.
+
+We give permission to the instructor to use our poster in the future for educational purposes.
