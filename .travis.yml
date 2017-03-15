@@ -1,6 +1,8 @@
 language: r
 pandoc_version: 1.19.1
 cache: packages
+before_install:
+- tlmgr install accents amsmath amsfonts amssymb hyperref hyphenat multicol qrcode tikzposter
 script:
 - rake proposal.pdf
 - rake proposal.html
