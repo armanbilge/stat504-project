@@ -131,7 +131,7 @@
       census$popden <- census$popden / 1000
       census$jobden <- census$jobden / 1000
       census$income <- census$income / 10000
-      census$transportation_distance <- census$transportation_distance / 10000
+      census$transportation_distance <- census$transportation_distance 
       stations <- merge(stations, census, all = T, by = "station_id")
     @
 
